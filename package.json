@@ -1,0 +1,14 @@
+{
+  "name": "ID-ERP-iOS",
+  "version": "1.0.0",
+  "description": "Enterprise Resource Planning iOS Application",
+  "main": "index.js",
+  "keywords": [
+    "iOS",
+    "Swift",
+    "Firebase",
+    "ERP"
+  ],
+  "author": "Your Name",
+  "license": "MIT"
+}
