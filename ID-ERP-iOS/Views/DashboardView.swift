@@ -7,7 +7,7 @@ struct DashboardView: View {
     @State private var selectedTab = 0
     
     var body: some View {
-        TabView(selection: $selectedTab) {
+        TabView(selection: ) {
             // Home Tab
             HomeTabView()
                 .tabItem {
@@ -157,7 +157,7 @@ struct ProjectsTabView: View {
                     }
                 }
             }
-            .sheet(isPresented: $showNewProjectSheet) {
+            .sheet(isPresented: ) {
                 NewProjectSheet()
             }
         }
@@ -337,78 +337,6 @@ struct ProjectRow: View {
     }
 }
 
-// MARK: - Detail Views
-struct ProjectDetailView: View {
-    let project: Project
-    
-    var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 16) {
-                Text(project.name)
-                    .font(.title2)
-                    .fontWeight(.bold)
-                
-                VStack(alignment: .leading, spacing: 12) {
-                    DetailRow(label: "Status", value: project.status)
-                    DetailRow(label: "Owner", value: project.owner)
-                    DetailRow(label: "Start Date", value: project.startDate.formatted(date: .abbreviated, time: .omitted))
-                    
-                    if let endDate = project.endDate {
-                        DetailRow(label: "End Date", value: endDate.formatted(date: .abbreviated, time: .omitted))
-                    }
-                    
-                    if let budget = project.budget {
-                        DetailRow(label: "Budget", value: "$\(String(format: "%.2f", budget))")
-                    }
-                }
-                .padding()
-                .background(Color(.systemGray6))
-                .cornerRadius(12)
-                
-                Spacer()
-            }
-            .padding()
-        }
-        .navigationTitle("Project Details")
-        .navigationBarTitleDisplayMode(.inline)
-    }
-}
-
-struct TaskDetailView: View {
-    let task: Task
-    
-    var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 16) {
-                Text(task.title)
-                    .font(.title2)
-                    .fontWeight(.bold)
-                
-                Text(task.description)
-                    .foregroundColor(.gray)
-                
-                VStack(alignment: .leading, spacing: 12) {
-                    DetailRow(label: "Status", value: task.status)
-                    DetailRow(label: "Priority", value: task.priority)
-                    DetailRow(label: "Assignee", value: task.assignee)
-                    
-                    if let dueDate = task.dueDate {
-                        DetailRow(label: "Due Date", value: dueDate.formatted(date: .abbreviated, time: .omitted))
-                    }
-                }
-                .padding()
-                .background(Color(.systemGray6))
-                .cornerRadius(12)
-                
-                Spacer()
-            }
-            .padding()
-        }
-        .navigationTitle("Task Details")
-        .navigationBarTitleDisplayMode(.inline)
-    }
-}
-
 struct DetailRow: View {
     let label: String
     let value: String
@@ -422,57 +350,4 @@ struct DetailRow: View {
                 .fontWeight(.semibold)
         }
     }
-}
-
-// MARK: - Sheet Views
-struct NewProjectSheet: View {
-    @EnvironmentObject var firestoreManager: FirestoreManager
-    @Environment(\.dismiss) var dismiss
-    @State private var name = ""
-    @State private var description = ""
-    
-    var body: some View {
-        NavigationStack {
-            Form {
-                Section("Project Details") {
-                    TextField("Project Name", text: $name)
-                    TextField("Description", text: $description, axis: .vertical)
-                        .lineLimit(3...5)
-                }
-            }
-            .navigationTitle("New Project")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Cancel") { dismiss() }
-                }
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Save") {
-                        let newProject = Project(
-                            id: UUID().uuidString,
-                            name: name,
-                            description: description,
-                            status: "active",
-                            startDate: Date(),
-                            endDate: nil,
-                            budget: nil,
-                            owner: "current_user",
-                            team: [],
-                            createdAt: Date()
-                        )
-                        firestoreManager.createProject(newProject)
-                        dismiss()
-                    }
-                    .disabled(name.isEmpty)
-                }
-            }
-        }
-    }
-}
-
-#Preview {
-    DashboardView()
-        .environmentObject(AuthenticationManager.shared)
-        .environmentObject(FirestoreManager.shared)
-        .environmentObject(NotificationManager.shared)
 }
