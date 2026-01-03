@@ -20,7 +20,7 @@ struct ProjectDetailView: View {
                 
                 // Quick Actions Grid
                 LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
-                    NavigationLink(destination: KanbanView(projectId: project.id)) {
+                    NavigationLink(destination: ProjectTasksView(projectId: project.id)) {
                         ActionCard(title: "Tasks", icon: "kanban", color: .blue)
                     }
                     
