@@ -95,12 +95,14 @@ struct HomeTabView: View {
                         }
                         
                         HStack(spacing: 12) {
-                            StatCard(
-                                title: "Team",
-                                value: String(firestoreManager.users.count),
-                                icon: "people.fill",
-                                color: .purple
-                            )
+                            NavigationLink(destination: PeopleView()) {
+                                StatCard(
+                                    title: "Team",
+                                    value: String(firestoreManager.users.count),
+                                    icon: "people.fill",
+                                    color: .purple
+                                )
+                            }
                             
                             StatCard(
                                 title: "Active",
@@ -264,7 +266,11 @@ struct ProfileTabView: View {
                         }
                     }
                 }
-                
+                NavigationLink(destination: SettingsView()) {
+                        Label("Settings", systemImage: "gear")
+                    }
+                    
+                    
                 Section {
                     Button(role: .destructive, action: {
                         authManager.logout()
