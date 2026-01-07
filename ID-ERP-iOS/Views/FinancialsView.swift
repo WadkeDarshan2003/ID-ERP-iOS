@@ -41,8 +41,8 @@ struct FinancialsView: View {
     
     private func calculateTotal(type: FinancialRecord.TransactionType) -> Double {
         financialManager.transactions
-            .filter { .type == type }
-            .reduce(0) {  + .amount }
+            .filter { $0.type == type }
+            .reduce(0) { $0 + $1.amount }
     }
     
     private func formatAmount(_ amount: Double) -> String {

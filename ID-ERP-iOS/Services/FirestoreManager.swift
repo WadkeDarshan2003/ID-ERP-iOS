@@ -9,6 +9,8 @@ class FirestoreManager: NSObject, ObservableObject {
     @Published var projects: [Project] = []
     @Published var tasks: [Task] = []
     @Published var users: [User] = []
+    @Published var activityLogs: [ActivityLog] = []
+    @Published var documents: [Document] = []
     @Published var isLoading = false
     @Published var errorMessage: String?
     
@@ -25,7 +27,7 @@ class FirestoreManager: NSObject, ObservableObject {
                 
                 if let error = error {
                     self?.errorMessage = error.localizedDescription
-                    print("Error fetching projects: \(error.localizedDescription)")
+                    Logger.error("Error fetching projects: \(error.localizedDescription)")
                     return
                 }
                 
@@ -38,7 +40,7 @@ class FirestoreManager: NSObject, ObservableObject {
                     self?.projects = try documents.compactMap { try $0.data(as: Project.self) }
                 } catch {
                     self?.errorMessage = error.localizedDescription
-                    print("Error decoding projects: \(error.localizedDescription)")
+                    Logger.error("Error decoding projects: \(error.localizedDescription)")
                 }
             }
         }
@@ -61,7 +63,7 @@ class FirestoreManager: NSObject, ObservableObject {
         db.collection("projects").document(project.id).setData(projectData.compactMapValues { $0 }) { [weak self] error in
             if let error = error {
                 self?.errorMessage = error.localizedDescription
-                print("Error creating project: \(error.localizedDescription)")
+                Logger.error("Error creating project: \(error.localizedDescription)")
             }
         }
     }
@@ -78,7 +80,7 @@ class FirestoreManager: NSObject, ObservableObject {
         db.collection("projects").document(project.id).updateData(projectData) { [weak self] error in
             if let error = error {
                 self?.errorMessage = error.localizedDescription
-                print("Error updating project: \(error.localizedDescription)")
+                Logger.error("Error updating project: \(error.localizedDescription)")
             }
         }
     }
@@ -87,7 +89,7 @@ class FirestoreManager: NSObject, ObservableObject {
         db.collection("projects").document(id).delete { [weak self] error in
             if let error = error {
                 self?.errorMessage = error.localizedDescription
-                print("Error deleting project: \(error.localizedDescription)")
+                Logger.error("Error deleting project: \(error.localizedDescription)")
             }
         }
     }
@@ -109,7 +111,7 @@ class FirestoreManager: NSObject, ObservableObject {
                 
                 if let error = error {
                     self?.errorMessage = error.localizedDescription
-                    print("Error fetching tasks: \(error.localizedDescription)")
+                    Logger.error("Error fetching tasks: \(error.localizedDescription)")
                     return
                 }
                 
@@ -122,7 +124,7 @@ class FirestoreManager: NSObject, ObservableObject {
                     self?.tasks = try documents.compactMap { try $0.data(as: Task.self) }
                 } catch {
                     self?.errorMessage = error.localizedDescription
-                    print("Error decoding tasks: \(error.localizedDescription)")
+                    Logger.error("Error decoding tasks: \(error.localizedDescription)")
                 }
             }
         }
@@ -144,7 +146,7 @@ class FirestoreManager: NSObject, ObservableObject {
         db.collection("tasks").document(task.id).setData(taskData.compactMapValues { $0 }) { [weak self] error in
             if let error = error {
                 self?.errorMessage = error.localizedDescription
-                print("Error creating task: \(error.localizedDescription)")
+                Logger.error("Error creating task: \(error.localizedDescription)")
             }
         }
     }
@@ -161,7 +163,7 @@ class FirestoreManager: NSObject, ObservableObject {
         db.collection("tasks").document(task.id).updateData(taskData) { [weak self] error in
             if let error = error {
                 self?.errorMessage = error.localizedDescription
-                print("Error updating task: \(error.localizedDescription)")
+                Logger.error("Error updating task: \(error.localizedDescription)")
             }
         }
     }
@@ -170,7 +172,7 @@ class FirestoreManager: NSObject, ObservableObject {
         db.collection("tasks").document(id).delete { [weak self] error in
             if let error = error {
                 self?.errorMessage = error.localizedDescription
-                print("Error deleting task: \(error.localizedDescription)")
+                Logger.error("Error deleting task: \(error.localizedDescription)")
             }
         }
     }
@@ -186,7 +188,7 @@ class FirestoreManager: NSObject, ObservableObject {
                 
                 if let error = error {
                     self?.errorMessage = error.localizedDescription
-                    print("Error fetching users: \(error.localizedDescription)")
+                    Logger.error("Error fetching users: \(error.localizedDescription)")
                     return
                 }
                 
@@ -199,9 +201,45 @@ class FirestoreManager: NSObject, ObservableObject {
                     self?.users = try documents.compactMap { try $0.data(as: User.self) }
                 } catch {
                     self?.errorMessage = error.localizedDescription
-                    print("Error decoding users: \(error.localizedDescription)")
+                    Logger.error("Error decoding users: \(error.localizedDescription)")
                 }
             }
+        }
+    }
+    
+    // MARK: - Activity Logs
+    func fetchActivityLogs(for projectId: String? = nil) {
+        var query: Query = db.collection("activity_logs")
+        
+        if let projectId = projectId {
+            query = query.whereField("project_id", isEqualTo: projectId)
+        }
+        
+        query.order(by: "timestamp", descending: true).addSnapshotListener { [weak self] querySnapshot, error in
+            if let error = error {
+                Logger.error("Error fetching logs: \(error.localizedDescription)")
+                return
+            }
+            
+            self?.activityLogs = querySnapshot?.documents.compactMap { try? $0.data(as: ActivityLog.self) } ?? []
+        }
+    }
+    
+    // MARK: - Documents
+    func fetchDocuments(for projectId: String? = nil) {
+        var query: Query = db.collection("documents")
+        
+        if let projectId = projectId {
+            query = query.whereField("project_id", isEqualTo: projectId)
+        }
+        
+        query.order(by: "uploaded_at", descending: true).addSnapshotListener { [weak self] querySnapshot, error in
+            if let error = error {
+                Logger.error("Error fetching documents: \(error.localizedDescription)")
+                return
+            }
+            
+            self?.documents = querySnapshot?.documents.compactMap { try? $0.data(as: Document.self) } ?? []
         }
     }
 }

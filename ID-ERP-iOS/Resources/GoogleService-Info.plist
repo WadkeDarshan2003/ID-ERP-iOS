@@ -7,17 +7,17 @@
 	<key>REVERSED_CLIENT_ID</key>
 	<string>com.googleusercontent.apps.YOUR_GOOGLE_CLIENT_ID</string>
 	<key>API_KEY</key>
-	<string>YOUR_FIREBASE_API_KEY</string>
+	<string>AIzaSyCkj5CAWs7xJp62R4028Z5CXCpCO8bxYyk</string>
 	<key>GCM_SENDER_ID</key>
-	<string>YOUR_GCM_SENDER_ID</string>
+	<string>700838936930</string>
 	<key>PLIST_VERSION</key>
 	<string>1</string>
 	<key>BUNDLE_ID</key>
 	<string>com.iderp.ios</string>
 	<key>PROJECT_ID</key>
-	<string>your-firebase-project-id</string>
+	<string>btw-erp</string>
 	<key>STORAGE_BUCKET</key>
-	<string>your-firebase-project-id.appspot.com</string>
+	<string>btw-erp.firebasestorage.app</string>
 	<key>IS_ADS_ENABLED</key>
 	<false/>
 	<key>IS_ANALYTICS_ENABLED</key>
@@ -29,7 +29,7 @@
 	<key>IS_SIGNIN_ENABLED</key>
 	<true/>
 	<key>GOOGLE_APP_ID</key>
-	<string>YOUR_FIREBASE_APP_ID</string>
+	<string>1:700838936930:ios:32a429794974855f2aec3b</string>
 	<key>DATABASE_URL</key>
 	<string>https://your-firebase-project-id.firebaseio.com</string>
 </dict>

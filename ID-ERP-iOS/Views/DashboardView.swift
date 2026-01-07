@@ -36,11 +36,12 @@ struct DashboardView: View {
             }
             
             // Sidebar
-            SidebarView(isShowing: , selectedTab: )
+            SidebarView(isShowing: $isSidebarVisible, selectedTab: $selectedTab)
         }
         .onAppear {
             firestoreManager.fetchProjects()
             firestoreManager.fetchTasks()
+            firestoreManager.fetchUsers() // Added fetch users
             notificationManager.getFCMToken()
         }
     }
@@ -98,8 +99,8 @@ struct HomeTabView: View {
                         }
                         
                         StatCard(
-                            title: "Active",
-                            value: "85%",
+                            title: "Completion",
+                            value: calculateCompletion(),
                             icon: "chart.bar.fill",
                             color: .orange
                         )
@@ -127,6 +128,13 @@ struct HomeTabView: View {
             .padding()
         }
         .navigationTitle("Dashboard")
+    }
+    
+    private func calculateCompletion() -> String {
+        guard !firestoreManager.tasks.isEmpty else { return "0%" }
+        let completed = firestoreManager.tasks.filter { $0.status == "completed" }.count
+        let percentage = Double(completed) / Double(firestoreManager.tasks.count) * 100
+        return "\(Int(percentage))%"
     }
 }
 

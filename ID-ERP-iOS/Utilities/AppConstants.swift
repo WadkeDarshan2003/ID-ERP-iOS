@@ -3,8 +3,8 @@ import Foundation
 struct AppConstants {
     
     // MARK: - API Configuration
-    static let firebaseProjectID = "your-firebase-project-id"
-    static let firebaseRegion = "us-central1"
+    static let firebaseProjectID = SecretManager.shared.firebaseProjectID
+    static let firebaseRegion = SecretManager.shared.firebaseRegion
     
     // MARK: - App Info
     static let appName = "ID ERP"

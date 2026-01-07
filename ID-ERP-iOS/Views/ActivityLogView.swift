@@ -2,16 +2,15 @@ import SwiftUI
 
 struct ActivityLogView: View {
     let projectId: String
-    // In a real app, fetch logs from Firestore
-    @State private var logs: [ActivityLog] = []
+    @EnvironmentObject var firestoreManager: FirestoreManager
     
     var body: some View {
         List {
-            if logs.isEmpty {
+            if firestoreManager.activityLogs.isEmpty {
                 Text("No activity recorded")
                     .foregroundColor(.gray)
             } else {
-                ForEach(logs) { log in
+                ForEach(firestoreManager.activityLogs) { log in
                     HStack(alignment: .top, spacing: 12) {
                         Circle()
                             .fill(Color.gray.opacity(0.2))
@@ -36,5 +35,8 @@ struct ActivityLogView: View {
             }
         }
         .navigationTitle("Timeline")
+        .onAppear {
+            firestoreManager.fetchActivityLogs(for: projectId)
+        }
     }
 }

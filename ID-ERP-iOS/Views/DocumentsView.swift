@@ -2,15 +2,15 @@ import SwiftUI
 
 struct DocumentsView: View {
     let projectId: String
-    @State private var documents: [Document] = [] 
+    @EnvironmentObject var firestoreManager: FirestoreManager
     
     var body: some View {
         List {
-            if documents.isEmpty {
+            if firestoreManager.documents.isEmpty {
                 Text("No documents uploaded")
                     .foregroundColor(.gray)
             } else {
-                ForEach(documents) { doc in
+                ForEach(firestoreManager.documents) { doc in
                     HStack {
                         Image(systemName: "doc.fill")
                             .foregroundColor(.blue)
@@ -33,5 +33,8 @@ struct DocumentsView: View {
             }
         }
         .navigationTitle("Documents")
+        .onAppear {
+            firestoreManager.fetchDocuments(for: projectId)
+        }
     }
 }

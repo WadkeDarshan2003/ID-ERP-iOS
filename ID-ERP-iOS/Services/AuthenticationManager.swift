@@ -43,7 +43,7 @@ class AuthenticationManager: NSObject, ObservableObject {
                 
                 if let error = error {
                     self?.errorMessage = error.localizedDescription
-                    print("Login error: \(error.localizedDescription)")
+                    Logger.error("Login error: \(error.localizedDescription)")
                 } else if let user = authResult?.user {
                     self?.fetchUserProfile(uid: user.uid)
                 }
@@ -62,7 +62,7 @@ class AuthenticationManager: NSObject, ObservableObject {
                 
                 if let error = error {
                     self?.errorMessage = error.localizedDescription
-                    print("Registration error: \(error.localizedDescription)")
+                    Logger.error("Registration error: \(error.localizedDescription)")
                 } else if let user = authResult?.user {
                     // Save user profile to Firestore
                     self?.createUserProfile(uid: user.uid, email: email, name: name, role: role)
@@ -80,7 +80,7 @@ class AuthenticationManager: NSObject, ObservableObject {
             errorMessage = nil
         } catch let error {
             errorMessage = error.localizedDescription
-            print("Logout error: \(error.localizedDescription)")
+            Logger.error("Logout error: \(error.localizedDescription)")
         }
     }
     
@@ -120,13 +120,13 @@ class AuthenticationManager: NSObject, ObservableObject {
             DispatchQueue.main.async {
                 if let error = error {
                     self?.errorMessage = error.localizedDescription
-                    print("Error fetching user profile: \(error.localizedDescription)")
+                    Logger.error("Error fetching user profile: \(error.localizedDescription)")
                 } else if let document = document, document.exists {
                     do {
                         let user = try document.data(as: User.self)
                         self?.currentUser = user
                     } catch {
-                        print("Error decoding user: \(error.localizedDescription)")
+                        Logger.error("Error decoding user: \(error.localizedDescription)")
                     }
                 }
             }
@@ -149,7 +149,7 @@ class AuthenticationManager: NSObject, ObservableObject {
             DispatchQueue.main.async {
                 if let error = error {
                     self?.errorMessage = error.localizedDescription
-                    print("Error creating user profile: \(error.localizedDescription)")
+                    Logger.error("Error creating user profile: \(error.localizedDescription)")
                 } else {
                     self?.isAuthenticated = true
                 }

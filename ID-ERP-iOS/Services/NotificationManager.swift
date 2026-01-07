@@ -24,11 +24,11 @@ class NotificationManager: NSObject, ObservableObject, MessagingDelegate {
     func getFCMToken() {
         Messaging.messaging().token { [weak self] token, error in
             if let error = error {
-                print("Error getting FCM token: \(error.localizedDescription)")
+                Logger.error("Error getting FCM token: \(error.localizedDescription)")
             } else if let token = token {
                 DispatchQueue.main.async {
                     self?.fcmToken = token
-                    print("FCM Token: \(token)")
+                    Logger.debug("FCM Token retrieved")
                     self?.saveFCMToken(token)
                 }
             }

@@ -61,8 +61,13 @@ coverage/
 .env.*.local
 
 # Firebase
+GoogleService-Info.plist
 GoogleService-Info-Dev.plist
 GoogleService-Info-Prod.plist
+
+# Secrets
+Secrets.plist
+ID-ERP-iOS/Resources/Secrets.plist
 
 # Misc
 *.log
