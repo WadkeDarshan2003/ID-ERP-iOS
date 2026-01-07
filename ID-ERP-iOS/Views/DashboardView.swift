@@ -7,15 +7,35 @@ struct DashboardView: View {
     
     @State private var isSidebarVisible = false
     @State private var selectedTab: Tab = .home
+    @State private var navigationPath = [Destination]()
     
     enum Tab {
         case home, projects, tasks, people, notifications, settings
     }
     
+    enum Destination: Hashable {
+        case projectDetail(Project, ProjectDetailView.ProjectTab?)
+        
+        static func == (lhs: Destination, rhs: Destination) -> Bool {
+            switch (lhs, rhs) {
+            case (.projectDetail(let p1, let t1), .projectDetail(let p2, let t2)):
+                return p1.id == p2.id && t1 == t2
+            }
+        }
+        
+        func hash(into hasher: inout Hasher) {
+            switch self {
+            case (.projectDetail(let p, let t)):
+                hasher.combine(p.id)
+                hasher.combine(t)
+            }
+        }
+    }
+    
     var body: some View {
         ZStack {
             // Main Content
-            NavigationStack {
+            NavigationStack(path: $navigationPath) {
                 VStack {
                     switch selectedTab {
                     case .home: HomeTabView()
@@ -33,16 +53,60 @@ struct DashboardView: View {
                         }
                     }
                 }
+                .navigationDestination(for: Destination.self) { destination in
+                    switch destination {
+                    case .projectDetail(let project, let tab):
+                        ProjectDetailView(project: project, initialTab: tab)
+                    }
+                }
             }
             
             // Sidebar
             SidebarView(isShowing: $isSidebarVisible, selectedTab: $selectedTab)
         }
         .onAppear {
-            firestoreManager.fetchProjects()
+            // For vendors, fetch only their allocated projects
+            if let userRole = authManager.currentUser?.role, userRole == "Vendor",
+               let userId = authManager.currentUser?.id {
+                firestoreManager.fetchUserProjects(userId: userId)
+            } else {
+                // For admin/designer, fetch all projects
+                firestoreManager.fetchProjects()
+            }
+            
             firestoreManager.fetchTasks()
-            firestoreManager.fetchUsers() // Added fetch users
+            firestoreManager.fetchUsers()
             notificationManager.getFCMToken()
+        }
+        .onChange(of: notificationManager.selectedNotification) { notification in
+            if let notification = notification {
+                handleNotificationLink(notification)
+            }
+        }
+    }
+    
+    private func handleNotificationLink(_ notification: LocalNotification) {
+        // Clear the selected notification so we can respond to the same one again if needed
+        notificationManager.selectedNotification = nil
+        
+        // Handle deep-link cases
+        if let projectId = notification.projectId {
+            // Find the project in firestoreManager.projects
+            if let project = firestoreManager.projects.first(where: { $0.id == projectId }) {
+                // Determine target tab
+                var targetTab: ProjectDetailView.ProjectTab?
+                if let tabStr = notification.targetTab {
+                    targetTab = ProjectDetailView.ProjectTab(rawValue: tabStr)
+                }
+                
+                // Navigate to Projects tab first
+                selectedTab = .projects
+                // Then push the ProjectDetailView to the navigation path
+                navigationPath.append(.projectDetail(project, targetTab))
+            }
+        } else {
+            // No project context, just go to notifications list
+            selectedTab = .notifications
         }
     }
 }
@@ -72,38 +136,64 @@ struct HomeTabView: View {
                 
                 // Quick Stats
                 VStack(spacing: 12) {
-                    HStack(spacing: 12) {
-                        StatCard(
-                            title: "Projects",
-                            value: String(firestoreManager.projects.count),
-                            icon: "folder.fill",
-                            color: .blue
-                        )
-                        
-                        StatCard(
-                            title: "Tasks",
-                            value: String(firestoreManager.tasks.count),
-                            icon: "checkmark.circle.fill",
-                            color: .green
-                        )
-                    }
-                    
-                    HStack(spacing: 12) {
-                        NavigationLink(destination: PeopleView()) {
+                    if let user = authManager.currentUser, user.role == "Vendor", let metrics = user.projectMetrics {
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text("Your Performance Summary")
+                                .font(.headline)
+                                .padding(.top)
+                            
+                            let totalEarnings = metrics.values.reduce(0.0) { $0 + $1.netAmount }
+                            let totalTasks = metrics.values.reduce(0) { $0 + $1.taskCount }
+                            
+                            HStack(spacing: 12) {
+                                StatCard(
+                                    title: "Total Earnings",
+                                    value: String(format: "₹%.0f", totalEarnings),
+                                    icon: "indianrupeesign.circle.fill",
+                                    color: .green
+                                )
+                                StatCard(
+                                    title: "Tasks Completed",
+                                    value: "\(totalTasks)",
+                                    icon: "checklist",
+                                    color: .blue
+                                )
+                            }
+                        }
+                    } else {
+                        HStack(spacing: 12) {
                             StatCard(
-                                title: "Team",
-                                value: String(firestoreManager.users.count),
-                                icon: "people.fill",
-                                color: .purple
+                                title: "Projects",
+                                value: String(firestoreManager.projects.count),
+                                icon: "folder.fill",
+                                color: .blue
+                            )
+                            
+                            StatCard(
+                                title: "Tasks",
+                                value: String(firestoreManager.tasks.count),
+                                icon: "checkmark.circle.fill",
+                                color: .green
                             )
                         }
                         
-                        StatCard(
-                            title: "Completion",
-                            value: calculateCompletion(),
-                            icon: "chart.bar.fill",
-                            color: .orange
-                        )
+                        HStack(spacing: 12) {
+                            NavigationLink(destination: PeopleView()) {
+                                StatCard(
+                                    title: "Team",
+                                    value: String(firestoreManager.users.count),
+                                    icon: "people.fill",
+                                    color: .purple
+                                )
+                            }
+                            
+                            StatCard(
+                                title: "Completion",
+                                value: calculateCompletion(),
+                                icon: "chart.bar.fill",
+                                color: .orange
+                            )
+                        }
                     }
                 }
                 

@@ -2,6 +2,56 @@ import SwiftUI
 
 struct ProjectDetailView: View {
     let project: Project
+    var initialTab: ProjectTab?
+    @EnvironmentObject var authManager: AuthenticationManager
+    @State private var selectedTab: ProjectTab = .overview
+
+    enum ProjectTab: String {
+        case overview, tasks, financials, meetings, documents, team
+    }
+    
+    var body: some View {
+        VStack(spacing: 0) {
+            // Tab Picker
+            Picker("Tab", selection: $selectedTab) {
+                Text("Overview").tag(ProjectTab.overview)
+                Text("Tasks").tag(ProjectTab.tasks)
+                // Only show financials for privileged roles
+                if let role = authManager.currentUser?.role, (role == "Admin" || role == "Designer") {
+                    Text("Financials").tag(ProjectTab.financials)
+                }
+                Text("Documents").tag(ProjectTab.documents)
+            }
+            .pickerStyle(.segmented)
+            .padding()
+
+            switch selectedTab {
+            case .overview:
+                ProjectOverviewTab(project: project)
+            case .tasks:
+                ProjectTasksView(projectId: project.id)
+            case .financials:
+                FinancialsView(projectId: project.id)
+            case .meetings:
+                MeetingsView(projectId: project.id)
+            case .documents:
+                DocumentsView(projectId: project.id)
+            case .team:
+                Text("Team View") // Placeholder
+            }
+        }
+        .onAppear {
+            if let initial = initialTab {
+                selectedTab = initial
+            }
+        }
+        .navigationTitle(project.name)
+        .navigationBarTitleDisplayMode(.inline)
+    }
+}
+
+struct ProjectOverviewTab: View {
+    let project: Project
     
     var body: some View {
         ScrollView {
@@ -17,26 +67,6 @@ struct ProjectDetailView: View {
                         .foregroundColor(.gray)
                 }
                 .padding(.horizontal)
-                
-                // Quick Actions Grid
-                LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
-                    NavigationLink(destination: ProjectTasksView(projectId: project.id)) {
-                        ActionCard(title: "Tasks", icon: "kanban", color: .blue)
-                    }
-                    
-                    NavigationLink(destination: FinancialsView(projectId: project.id)) {
-                        ActionCard(title: "Financials", icon: "dollarsign.circle.fill", color: .green)
-                    }
-                    
-                    NavigationLink(destination: MeetingsView(projectId: project.id)) {
-                        ActionCard(title: "Meetings", icon: "calendar", color: .purple)
-                    }
-                    
-                    NavigationLink(destination: DocumentsView(projectId: project.id)) {
-                        ActionCard(title: "Documents", icon: "doc.fill", color: .orange)
-                    }
-                }
-                .padding()
                 
                 // Details Section
                 VStack(alignment: .leading, spacing: 12) {
@@ -61,8 +91,6 @@ struct ProjectDetailView: View {
             }
             .padding(.vertical)
         }
-        .navigationTitle("Project Overview")
-        .navigationBarTitleDisplayMode(.inline)
     }
 }
 

@@ -37,11 +37,34 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void
     ) {
         // Handle notification payload
-        if let messageID = userInfo["gcm.message_id"] {
-            print("Message ID: \(messageID)")
-        }
+        handleNotificationPayload(userInfo)
         
         completionHandler(UIBackgroundFetchResult.newData)
+    }
+    
+    private func handleNotificationPayload(_ userInfo: [AnyHashable: Any]) {
+        let aps = userInfo["aps"] as? [String: Any]
+        let alert = aps?["alert"] as? [String: Any]
+        
+        let title = alert?["title"] as? String ?? userInfo["title"] as? String ?? "New Notification"
+        let body = alert?["body"] as? String ?? userInfo["body"] as? String ?? ""
+        
+        let notification = LocalNotification(
+            id: UUID().uuidString,
+            title: title,
+            message: body,
+            timestamp: Date(),
+            isRead: false,
+            type: userInfo["type"] as? String ?? "info",
+            projectId: userInfo["projectId"] as? String,
+            projectName: userInfo["projectName"] as? String,
+            targetTab: userInfo["targetTab"] as? String,
+            taskId: userInfo["taskId"] as? String,
+            meetingId: userInfo["meetingId"] as? String,
+            deepLinkPath: userInfo["deepLinkPath"] as? String
+        )
+        
+        NotificationManager.shared.addNotification(notification)
     }
     
     func application(
@@ -83,8 +106,29 @@ extension AppDelegate: UNUserNotificationCenterDelegate {
     ) {
         let userInfo = response.notification.request.content.userInfo
         
-        if let title = response.notification.request.content.title as String? {
-            print("User tapped notification: \(title)")
+        let aps = userInfo["aps"] as? [String: Any]
+        let alert = aps?["alert"] as? [String: Any]
+        
+        let title = alert?["title"] as? String ?? userInfo["title"] as? String ?? "New Notification"
+        let body = alert?["body"] as? String ?? userInfo["body"] as? String ?? ""
+        
+        let notification = LocalNotification(
+            id: UUID().uuidString,
+            title: title,
+            message: body,
+            timestamp: Date(),
+            isRead: true, // Mark as read if they tapped it
+            type: userInfo["type"] as? String ?? "info",
+            projectId: userInfo["projectId"] as? String,
+            projectName: userInfo["projectName"] as? String,
+            targetTab: userInfo["targetTab"] as? String,
+            taskId: userInfo["taskId"] as? String,
+            meetingId: userInfo["meetingId"] as? String,
+            deepLinkPath: userInfo["deepLinkPath"] as? String
+        )
+        
+        DispatchQueue.main.async {
+            NotificationManager.shared.selectedNotification = notification
         }
         
         completionHandler()

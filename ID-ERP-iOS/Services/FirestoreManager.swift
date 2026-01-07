@@ -46,19 +46,65 @@ class FirestoreManager: NSObject, ObservableObject {
         }
     }
     
+    // Fetch only projects where user is in team (for vendor access control)
+    func fetchUserProjects(userId: String) {
+        isLoading = true
+        errorMessage = nil
+        
+        db.collection("projects").whereField("team", arrayContains: userId)
+            .order(by: "created_at", descending: true)
+            .addSnapshotListener { [weak self] querySnapshot, error in
+                DispatchQueue.main.async {
+                    self?.isLoading = false
+                    
+                    if let error = error {
+                        self?.errorMessage = error.localizedDescription
+                        Logger.error("Error fetching user projects: \(error.localizedDescription)")
+                        return
+                    }
+                    
+                    guard let documents = querySnapshot?.documents else {
+                        self?.projects = []
+                        return
+                    }
+                    
+                    do {
+                        self?.projects = try documents.compactMap { try $0.data(as: Project.self) }
+                    } catch {
+                        self?.errorMessage = error.localizedDescription
+                        Logger.error("Error decoding user projects: \(error.localizedDescription)")
+                    }
+                }
+            }
+    }
+    
     func createProject(_ project: Project) {
-        let projectData = [
+        let projectData: [String: Any?] = [
             "id": project.id,
+            "tenantId": project.tenantId,
             "name": project.name,
             "description": project.description,
             "status": project.status,
+            "type": project.type.rawValue,
+            "category": project.category.rawValue,
             "start_date": Timestamp(date: project.startDate),
             "end_date": project.endDate.map { Timestamp(date: $0) },
+            "deadline": project.deadline.map { Timestamp(date: $0) },
             "budget": project.budget,
+            "initial_budget": project.initialBudget,
             "owner": project.owner,
+            "created_by": project.createdBy,
+            "created_at": Timestamp(date: project.createdAt),
+            "client_id": project.clientId,
+            "client_ids": project.clientIds,
+            "lead_designer_id": project.leadDesignerId,
+            "team_members": project.teamMembers,
             "team": project.team,
-            "created_at": Timestamp(date: project.createdAt)
-        ] as [String: Any?]
+            "vendor_ids": project.vendorIds,
+            "hidden_vendors": project.hiddenVendors,
+            "thumbnail": project.thumbnail,
+            "designer_charge_percentage": project.designerChargePercentage
+        ]
         
         db.collection("projects").document(project.id).setData(projectData.compactMapValues { $0 }) { [weak self] error in
             if let error = error {
@@ -69,15 +115,28 @@ class FirestoreManager: NSObject, ObservableObject {
     }
     
     func updateProject(_ project: Project) {
-        let projectData = [
+        let projectData: [String: Any?] = [
             "name": project.name,
             "description": project.description,
             "status": project.status,
+            "type": project.type.rawValue,
+            "category": project.category.rawValue,
+            "end_date": project.endDate.map { Timestamp(date: $0) },
+            "deadline": project.deadline.map { Timestamp(date: $0) },
             "budget": project.budget,
-            "team": project.team
-        ] as [String: Any]
+            "initial_budget": project.initialBudget,
+            "client_ids": project.clientIds,
+            "lead_designer_id": project.leadDesignerId,
+            "team_members": project.teamMembers,
+            "team": project.team,
+            "vendor_ids": project.vendorIds,
+            "hidden_vendors": project.hiddenVendors,
+            "thumbnail": project.thumbnail,
+            "designer_charge_percentage": project.designerChargePercentage,
+            "updated_at": Timestamp(date: Date())
+        ]
         
-        db.collection("projects").document(project.id).updateData(projectData) { [weak self] error in
+        db.collection("projects").document(project.id).updateData(projectData.compactMapValues { $0 }) { [weak self] error in
             if let error = error {
                 self?.errorMessage = error.localizedDescription
                 Logger.error("Error updating project: \(error.localizedDescription)")
@@ -131,17 +190,23 @@ class FirestoreManager: NSObject, ObservableObject {
     }
     
     func createTask(_ task: Task) {
-        let taskData = [
+        let taskData: [String: Any?] = [
             "id": task.id,
             "project_id": task.projectId,
             "title": task.title,
             "description": task.description,
             "status": task.status,
+            "progress": task.progress,
             "priority": task.priority,
+            "category": task.category,
             "assignee": task.assignee,
+            "assignee_id": task.assigneeId,
             "due_date": task.dueDate.map { Timestamp(date: $0) },
-            "created_at": Timestamp(date: task.createdAt)
-        ] as [String: Any?]
+            "start_date": task.startDate.map { Timestamp(date: $0) },
+            "created_at": Timestamp(date: task.createdAt),
+            "dependencies": task.dependencies,
+            "documents": task.documents
+        ]
         
         db.collection("tasks").document(task.id).setData(taskData.compactMapValues { $0 }) { [weak self] error in
             if let error = error {
@@ -152,15 +217,22 @@ class FirestoreManager: NSObject, ObservableObject {
     }
     
     func updateTask(_ task: Task) {
-        let taskData = [
+        let taskData: [String: Any?] = [
             "title": task.title,
             "description": task.description,
             "status": task.status,
+            "progress": task.progress,
             "priority": task.priority,
-            "assignee": task.assignee
-        ] as [String: Any]
+            "category": task.category,
+            "assignee": task.assignee,
+            "assignee_id": task.assigneeId,
+            "due_date": task.dueDate.map { Timestamp(date: $0) },
+            "start_date": task.startDate.map { Timestamp(date: $0) },
+            "dependencies": task.dependencies,
+            "documents": task.documents
+        ]
         
-        db.collection("tasks").document(task.id).updateData(taskData) { [weak self] error in
+        db.collection("tasks").document(task.id).updateData(taskData.compactMapValues { $0 }) { [weak self] error in
             if let error = error {
                 self?.errorMessage = error.localizedDescription
                 Logger.error("Error updating task: \(error.localizedDescription)")

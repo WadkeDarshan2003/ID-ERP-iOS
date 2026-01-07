@@ -16,38 +16,45 @@ enum SortOrder: String {
 
 // MARK: - User Enumerations
 enum UserRole: String, CaseIterable {
-    case admin = "admin"
-    case manager = "manager"
-    case user = "user"
-    case guest = "guest"
+    case admin = "Admin"
+    case designer = "Designer"
+    case vendor = "Vendor"
+    case client = "Client"
     
     var displayName: String {
-        switch self {
-        case .admin:
-            return "Administrator"
-        case .manager:
-            return "Manager"
-        case .user:
-            return "User"
-        case .guest:
-            return "Guest"
-        }
+        return self.rawValue
     }
 }
 
 // MARK: - Project Enumerations
 enum ProjectStatus: String, CaseIterable {
-    case active = "active"
-    case completed = "completed"
-    case archived = "archived"
-    case onHold = "on_hold"
+    case discovery = "Discovery"
+    case planning = "Planning"
+    case execution = "Execution"
+    case completed = "Completed"
+    case onHold = "On Hold"
     
     var displayName: String {
-        switch self {
-        case .active:
-            return "Active"
-        case .completed:
-            return "Completed"
+        return self.rawValue
+    }
+}
+
+// MARK: - Task Enumerations
+enum TaskStatus: String, CaseIterable {
+    case todo = "To Do"
+    case inProgress = "In Progress"
+    case review = "Review"
+    case done = "Done"
+    case overdue = "Overdue"
+    case aborted = "Aborted"
+    case onHold = "On Hold"
+}
+
+enum TaskPriority: String, CaseIterable {
+    case low = "low"
+    case medium = "medium"
+    case high = "high"
+}
         case .archived:
             return "Archived"
         case .onHold:

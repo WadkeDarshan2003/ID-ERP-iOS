@@ -1,24 +1,25 @@
 import SwiftUI
 
 struct PeopleView: View {
+    @EnvironmentObject var authManager: AuthenticationManager
     @EnvironmentObject var firestoreManager: FirestoreManager
     @State private var selectedTab = 0
     
     var designers: [User] {
-        firestoreManager.users.filter { .role == "designer" || .role == "admin" }
+        firestoreManager.users.filter { $0.role == "Designer" || $0.role == "Admin" }
     }
     
     var clients: [User] {
-        firestoreManager.users.filter { .role == "client" }
+        firestoreManager.users.filter { $0.role == "Client" }
     }
     
     var vendors: [User] {
-        firestoreManager.users.filter { .role == "vendor" }
+        firestoreManager.users.filter { $0.role == "Vendor" }
     }
     
     var body: some View {
         VStack(spacing: 0) {
-            Picker("Category", selection: ) {
+            Picker("Category", selection: $selectedTab) {
                 Text("Team").tag(0)
                 Text("Clients").tag(1)
                 Text("Vendors").tag(2)
@@ -27,7 +28,7 @@ struct PeopleView: View {
             .padding()
             .background(Color(.systemBackground))
             
-            TabView(selection: ) {
+            TabView(selection: $selectedTab) {
                 UserListView(users: designers, title: "Team Members")
                     .tag(0)
                 
@@ -74,8 +75,8 @@ struct UserListView: View {
                                 .font(.caption)
                                 .foregroundColor(.gray)
                             
-                            if let dept = user.department {
-                                Text(dept)
+                            if let specialty = user.specialty {
+                                Text(specialty)
                                     .font(.caption2)
                                     .padding(.horizontal, 6)
                                     .padding(.vertical, 2)
@@ -85,6 +86,16 @@ struct UserListView: View {
                         }
                         
                         Spacer()
+                        
+                        if let phone = user.phone, !phone.isEmpty {
+                            Button(action: {
+                                WhatsAppUtils.openWhatsApp(phone: phone, message: "Hi \(user.name), welcome to the ERP!")
+                            }) {
+                                Image(systemName: "message.fill")
+                                    .foregroundColor(.green)
+                            }
+                            .buttonStyle(.plain)
+                        }
                         
                         Image(systemName: "chevron.right")
                             .font(.caption)

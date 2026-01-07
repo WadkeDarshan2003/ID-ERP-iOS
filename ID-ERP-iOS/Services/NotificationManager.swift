@@ -9,6 +9,7 @@ class NotificationManager: NSObject, ObservableObject, MessagingDelegate {
     @Published var notifications: [LocalNotification] = []
     @Published var unreadCount = 0
     @Published var fcmToken: String?
+    @Published var selectedNotification: LocalNotification?
     
     override private init() {
         super.init()
@@ -51,12 +52,18 @@ class NotificationManager: NSObject, ObservableObject, MessagingDelegate {
         guard let userId = Auth.auth().currentUser?.uid else { return }
         
         let db = Firestore.firestore()
+        // Align with Android: use fcmTokens array
         db.collection("users").document(userId).updateData([
-            "fcm_token": token,
+            "fcmTokens": FieldValue.arrayUnion([token]),
             "updated_at": Timestamp(date: Date())
         ]) { error in
             if let error = error {
-                print("Error saving FCM token: \(error.localizedDescription)")
+                print("Error saving FCM token (trying to set instead): \(error.localizedDescription)")
+                // If document update fails (e.g. doesn't exist), try to set it
+                db.collection("users").document(userId).setData([
+                    "fcmTokens": [token],
+                    "updated_at": Timestamp(date: Date())
+                ], merge: true)
             }
         }
     }
@@ -97,13 +104,13 @@ struct LocalNotification: Identifiable, Equatable {
     let message: String
     let timestamp: Date
     var isRead: Bool
-    let type: NotificationType
+    let type: String // Match Android: info, success, warning, error
     
-    enum NotificationType: String {
-        case projectUpdate = "project_update"
-        case taskAssigned = "task_assigned"
-        case taskCompleted = "task_completed"
-        case messageReceived = "message_received"
-        case systemAlert = "system_alert"
-    }
+    // Deep linking data - Aligned with Android Notification interface
+    var projectId: String?
+    var projectName: String?
+    var targetTab: String? // discovery, plan, financials, team, timeline, documents, meetings
+    var taskId: String?
+    var meetingId: String?
+    var deepLinkPath: String?
 }

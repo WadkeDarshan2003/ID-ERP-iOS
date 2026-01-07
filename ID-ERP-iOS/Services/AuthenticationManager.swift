@@ -136,13 +136,14 @@ class AuthenticationManager: NSObject, ObservableObject {
     private func createUserProfile(uid: String, email: String, name: String, role: String) {
         let db = Firestore.firestore()
         
+        // Align with Android/Web: uses camelCase
         let userData: [String: Any] = [
             "id": uid,
             "email": email,
             "name": name,
             "role": role,
-            "created_at": Timestamp(date: Date()),
-            "is_active": true
+            "createdAt": Timestamp(date: Date()),
+            "isActive": true
         ]
         
         db.collection("users").document(uid).setData(userData) { [weak self] error in

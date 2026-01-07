@@ -207,3 +207,14 @@ class DeviceUtils {
         return Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "Unknown"
     }
 }
+
+// MARK: - WhatsApp Utilities
+class WhatsAppUtils {
+    static func openWhatsApp(phone: String, message: String) {
+        let cleanPhone = phone.filter { $0.isNumber }
+        let urlString = "https://wa.me/\(cleanPhone)?text=\(message.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")"
+        if let url = URL(string: urlString) {
+            UIApplication.shared.open(url)
+        }
+    }
+}
