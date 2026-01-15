@@ -1,14 +1,26 @@
 {
   "name": "ID-ERP-iOS",
-  "version": "1.0.0",
-  "description": "Enterprise Resource Planning iOS Application",
+  "version": "1.0.1",
+  "description": "Enterprise Resource Planning iOS Application - Multi-tenant with Firebase integration",
   "main": "index.js",
   "keywords": [
     "iOS",
     "Swift",
     "Firebase",
-    "ERP"
+    "ERP",
+    "Project Management",
+    "Multi-tenant"
   ],
-  "author": "Your Name",
-  "license": "MIT"
+  "author": "Kydo Solutions",
+  "license": "MIT",
+  "buildAndDeploy": {
+    "platform": "iOS",
+    "requirements": [
+      "Xcode 14.0+",
+      "iOS 14.0+",
+      "CocoaPods 1.11+"
+    ],
+    "readyForBuild": true,
+    "lastUpdated": "2026-01-15"
+  }
 }

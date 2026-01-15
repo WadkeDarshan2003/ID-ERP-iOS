@@ -1,17 +1,25 @@
 import Foundation
 
+enum Role: String, Codable {
+    case admin = "Admin"
+    case designer = "Designer"
+    case vendor = "Vendor"
+    case client = "Client"
+}
+
 struct User: Codable, Identifiable {
     let id: String
     let email: String
     let name: String
-    let role: String
+    let role: Role
     let phone: String?
     let avatar: String?
     var tenantId: String?
-    var tenantIds: [String]?
-    var company: String?
-    var specialty: String?
+    var tenantIds: [String]? // For vendors/designers: array of tenant IDs they can access
+    var company: String? // For vendors
+    var specialty: String? // For designers/vendors
     var authMethod: String? // "email" or "phone"
+    var createdBy: String? // ID of the user who created this user
     
     // Vendor project metrics
     var projectMetrics: [String: ProjectMetric]?
@@ -32,6 +40,7 @@ struct User: Codable, Identifiable {
         case company
         case specialty
         case authMethod
+        case createdBy
         case projectMetrics
         case createdAt
         case lastLogin
