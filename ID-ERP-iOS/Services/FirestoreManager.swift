@@ -298,20 +298,20 @@ class FirestoreManager: NSObject, ObservableObject {
     }
     
     // MARK: - Documents
-    func fetchDocuments(for projectId: String? = nil) {
-        var query: Query = db.collection("documents")
+    func fetchDocuments(for projectId: String) {
+        let query = db.collection("projects").document(projectId).collection("documents")
         
-        if let projectId = projectId {
-            query = query.whereField("project_id", isEqualTo: projectId)
-        }
-        
-        query.order(by: "uploaded_at", descending: true).addSnapshotListener { [weak self] querySnapshot, error in
+        query.addSnapshotListener { [weak self] querySnapshot, error in
             if let error = error {
                 Logger.error("Error fetching documents: \(error.localizedDescription)")
                 return
             }
             
-            self?.documents = querySnapshot?.documents.compactMap { try? $0.data(as: Document.self) } ?? []
+            var docs = querySnapshot?.documents.compactMap { try? $0.data(as: Document.self) } ?? []
+            // Sort by uploadDate descending
+            docs.sort { ($0.uploadDate ?? "") > ($1.uploadDate ?? "") }
+            
+            self?.documents = docs
         }
     }
 }
