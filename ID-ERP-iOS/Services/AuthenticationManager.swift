@@ -121,6 +121,7 @@ class AuthenticationManager: NSObject, ObservableObject {
                 if let error = error {
                     self?.errorMessage = error.localizedDescription
                     Logger.error("Error fetching user profile: \(error.localizedDescription)")
+                    // Don't logout on network error, just fail to load profile
                 } else if let document = document, document.exists {
                     do {
                         let user = try document.data(as: User.self)
@@ -128,6 +129,11 @@ class AuthenticationManager: NSObject, ObservableObject {
                     } catch {
                         Logger.error("Error decoding user: \(error.localizedDescription)")
                     }
+                } else {
+                    // Profile does not exist - Enforce STRICT LOGIN
+                    Logger.error("User profile not found for UID: \(uid). Logging out.")
+                    self?.errorMessage = "Account not found. Please contact your administrator."
+                    self?.logout()
                 }
             }
         }

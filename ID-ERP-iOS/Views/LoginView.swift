@@ -69,20 +69,6 @@ struct LoginView: View {
                             .font(.caption)
                             .foregroundColor(.red)
                     }
-                    
-                    // Register Link
-                    HStack {
-                        Text("Don't have an account?")
-                            .font(.subheadline)
-                        
-                        Button(action: {
-                            showRegisterView = true
-                        }) {
-                            Text("Sign Up")
-                                .fontWeight(.semibold)
-                                .foregroundColor(.blue)
-                        }
-                    }
                 }
                 .padding(20)
                 .background(Color(.systemBackground))
